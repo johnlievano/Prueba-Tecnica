@@ -184,20 +184,100 @@ if (gridProyectos) {
     }
   });
 
-  // Funciones globales para modales
-  window.abrirModal = function () {
+  // =========================================================================
+  // MODAL DE PROYECTO - CON SELECCIÓN DE DOCENTE
+  // =========================================================================
+  window.abrirModal = async function () {
     document.getElementById("modalProyecto").classList.remove("hidden");
+    
+    // Cargar lista de docentes para el select
+    try {
+      const response = await fetch(`${API_URL}?action=getUsers`);
+      const users = await response.json();
+      
+      // Filtrar solo usuarios con rol teacher
+      const docentes = users.filter(u => u.role === 'teacher');
+      
+      const selectDocente = document.getElementById('docenteProyecto');
+      selectDocente.innerHTML = '<option value="" disabled selected>Selecciona un docente</option>';
+      
+      docentes.forEach(docente => {
+        selectDocente.innerHTML += `<option value="${docente.id}">${docente.name} (${docente.email})</option>`;
+      });
+    } catch (error) {
+      console.error("Error cargando docentes:", error);
+      document.getElementById('docenteProyecto').innerHTML = '<option value="" disabled>Error cargando docentes</option>';
+    }
   };
+
   window.cerrarModal = function () {
     document.getElementById("modalProyecto").classList.add("hidden");
     document.getElementById("formNuevoProyecto").reset();
+    // Resetear el select de docentes a su estado inicial
+    const selectDocente = document.getElementById('docenteProyecto');
+    selectDocente.innerHTML = '<option value="" disabled selected>Cargando docentes...</option>';
   };
+
   window.logout = function () {
     localStorage.removeItem("user");
     window.location.href = "index.html";
   };
 
+  // =========================================================================
+  // CREAR PROYECTO (con teacher_id)
+  // =========================================================================
+  const formModal = document.getElementById("formNuevoProyecto");
+  if (formModal) {
+    formModal.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const titulo = document.getElementById("tituloProyecto").value.trim();
+      const desc = document.getElementById("descProyecto").value.trim();
+      const teacherId = document.getElementById("docenteProyecto").value;
+      
+      if (!titulo || !desc || !teacherId) {
+        alert("Todos los campos son obligatorios, incluyendo el docente asignado.");
+        return;
+      }
+
+      const btn = document.getElementById("btnGuardarProyecto");
+      btn.innerText = "Guardando...";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "createProject",
+            data: { 
+              title: titulo, 
+              description: desc, 
+              student_id: currentUser.id,
+              teacher_id: teacherId // <-- NUEVO CAMPO
+            }
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          cerrarModal();
+          await loadProjects();
+        } else {
+          alert("Error: " + (result.message || "No se pudo crear el proyecto."));
+        }
+      } catch (error) {
+        console.error("Error al crear proyecto:", error);
+        alert("Error de conexión al crear proyecto.");
+      } finally {
+        btn.innerText = "Guardar";
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // =========================================================================
   // Cargar proyectos
+  // =========================================================================
   async function loadProjects() {
     if (!currentUser) return;
     const grid = document.getElementById("listaProyectos");
@@ -228,7 +308,9 @@ if (gridProyectos) {
     }
   }
 
+  // =========================================================================
   // Renderizar proyectos con filtros
+  // =========================================================================
   function renderProjects() {
     const grid = document.getElementById("listaProyectos");
     if (!grid) return;
@@ -271,10 +353,10 @@ if (gridProyectos) {
               : "text-gray-500 font-medium";
 
           botonesAccion = `
-                    <button onclick="cambiarEstadoProyecto('${p.id}', 'approved')" class="${aprobarClass} text-sm hover:underline border border-gray-200 rounded px-3 py-1 bg-gray-50 hover:bg-gray-100 transition">✓ Aprobar</button>
-                    <button onclick="cambiarEstadoProyecto('${p.id}', 'rejected')" class="${rechazarClass} text-sm hover:underline border border-gray-200 rounded px-3 py-1 bg-gray-50 hover:bg-gray-100 transition">✗ Rechazar</button>
-                    <button onclick="abrirModalFeedback('${p.id}', '${p.title}', '${p.last_feedback || ""}')" class="text-purple-600 text-sm hover:underline border border-gray-200 rounded px-3 py-1 bg-gray-50 hover:bg-gray-100 transition">💬 Feedback</button>
-                `;
+            <button onclick="cambiarEstadoProyecto('${p.id}', 'approved')" class="${aprobarClass} text-sm hover:underline border border-gray-200 rounded px-3 py-1 bg-gray-50 hover:bg-gray-100 transition">✓ Aprobar</button>
+            <button onclick="cambiarEstadoProyecto('${p.id}', 'rejected')" class="${rechazarClass} text-sm hover:underline border border-gray-200 rounded px-3 py-1 bg-gray-50 hover:bg-gray-100 transition">✗ Rechazar</button>
+            <button onclick="abrirModalFeedback('${p.id}', '${p.title}', '${p.last_feedback || ""}')" class="text-purple-600 text-sm hover:underline border border-gray-200 rounded px-3 py-1 bg-gray-50 hover:bg-gray-100 transition">💬 Feedback</button>
+          `;
         }
 
         let borderClass =
@@ -290,16 +372,16 @@ if (gridProyectos) {
           : "";
 
         return `
-            <div class="bg-white p-4 sm:p-5 rounded-lg shadow-md border-l-4 ${borderClass} hover:shadow-lg transition-all flex flex-col h-full">
-                <h3 class="font-bold text-lg text-gray-800 break-words">${p.title}</h3>
-                <p class="text-sm text-gray-600 mt-1 mb-3 flex-grow break-words">${p.description}</p>
-                ${feedbackHTML}
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-3 pt-3 border-t border-gray-100">
-                    <span class="text-xs font-bold px-2 py-1 bg-gray-100 text-gray-800 rounded uppercase inline-block">${p.status}</span>
-                    <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-end">${botonesAccion}</div>
-                </div>
+          <div class="bg-white p-4 sm:p-5 rounded-lg shadow-md border-l-4 ${borderClass} hover:shadow-lg transition-all flex flex-col h-full">
+            <h3 class="font-bold text-lg text-gray-800 break-words">${p.title}</h3>
+            <p class="text-sm text-gray-600 mt-1 mb-3 flex-grow break-words">${p.description}</p>
+            ${feedbackHTML}
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-3 pt-3 border-t border-gray-100">
+              <span class="text-xs font-bold px-2 py-1 bg-gray-100 text-gray-800 rounded uppercase inline-block">${p.status}</span>
+              <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-end">${botonesAccion}</div>
             </div>
-            `;
+          </div>
+        `;
       })
       .join("");
   }
@@ -312,7 +394,9 @@ if (gridProyectos) {
     filterSelect.addEventListener("change", renderProjects);
   }
 
+  // =========================================================================
   // Cambiar estado del proyecto (aprobación/rechazo sin feedback)
+  // =========================================================================
   window.cambiarEstadoProyecto = async function (projectId, nuevoEstado) {
     if (!currentUser) {
       alert("Sesión no válida. Recarga la página.");
@@ -352,7 +436,9 @@ if (gridProyectos) {
     }
   };
 
+  // =========================================================================
   // Guardar feedback (sin cambiar el estado)
+  // =========================================================================
   const formFeedback = document.getElementById("formFeedback");
   if (formFeedback) {
     formFeedback.addEventListener("submit", async (e) => {
@@ -409,7 +495,9 @@ if (gridProyectos) {
     });
   }
 
+  // =========================================================================
   // Funciones de feedback (deben estar globales)
+  // =========================================================================
   window.abrirModalFeedback = function (
     projectId,
     projectTitle,
@@ -471,11 +559,11 @@ if (gridProyectos) {
       contenedor.innerHTML = tareas
         .map(
           (t) => `
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b text-sm gap-2 hover:bg-gray-50">
-                    <span class="text-gray-700 break-words w-full sm:w-2/3">${t.description}</span>
-                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded border whitespace-nowrap">Vence: ${t.due_date || "Sin fecha"}</span>
-                </div>
-            `,
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b text-sm gap-2 hover:bg-gray-50">
+            <span class="text-gray-700 break-words w-full sm:w-2/3">${t.description}</span>
+            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded border whitespace-nowrap">Vence: ${t.due_date || "Sin fecha"}</span>
+          </div>
+        `,
         )
         .join("");
     } catch (e) {
@@ -553,22 +641,22 @@ if (gridProyectos) {
                 ? "bg-blue-100 text-blue-800"
                 : "bg-green-100 text-green-800";
           return `
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                    <td class="py-3 px-2 sm:px-4 text-left whitespace-nowrap font-medium text-gray-800 text-sm sm:text-base">${u.name}</td>
-                    <td class="py-3 px-2 sm:px-4 text-left truncate max-w-[120px] sm:max-w-[200px] text-sm sm:text-base" title="${u.email}">${u.email}</td>
-                    <td class="py-3 px-2 sm:px-4 text-left">
-                        <span class="py-1 px-2 sm:px-3 rounded-full text-[10px] sm:text-xs font-bold uppercase ${bgRole}">${u.role}</span>
-                    </td>
-                    <td class="py-3 px-2 sm:px-4 text-center">
-                        <select onchange="cambiarRolUsuario('${u.id}', this.value)" class="w-full min-w-[90px] max-w-[120px] border border-gray-300 rounded px-1 sm:px-2 py-1 text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 cursor-pointer bg-white">
-                            <option value="" disabled selected>Cambiar</option>
-                            <option value="student">Estudiante</option>
-                            <option value="teacher">Docente</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </td>
-                </tr>
-                `;
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+              <td class="py-3 px-2 sm:px-4 text-left whitespace-nowrap font-medium text-gray-800 text-sm sm:text-base">${u.name}</td>
+              <td class="py-3 px-2 sm:px-4 text-left truncate max-w-[120px] sm:max-w-[200px] text-sm sm:text-base" title="${u.email}">${u.email}</td>
+              <td class="py-3 px-2 sm:px-4 text-left">
+                <span class="py-1 px-2 sm:px-3 rounded-full text-[10px] sm:text-xs font-bold uppercase ${bgRole}">${u.role}</span>
+              </td>
+              <td class="py-3 px-2 sm:px-4 text-center">
+                <select onchange="cambiarRolUsuario('${u.id}', this.value)" class="w-full min-w-[90px] max-w-[120px] border border-gray-300 rounded px-1 sm:px-2 py-1 text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 cursor-pointer bg-white">
+                  <option value="" disabled selected>Cambiar</option>
+                  <option value="student">Estudiante</option>
+                  <option value="teacher">Docente</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </td>
+            </tr>
+          `;
         })
         .join("");
     } catch (e) {
