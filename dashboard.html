@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Seguimiento</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuente Inter para mejor legibilidad -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Transición suave para la aparición de modales */
+        .modal-transition {
+            transition: opacity 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- ==================== ENCABEZADO ==================== -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <!-- Título del panel -->
+            <h1 class="text-2xl font-bold text-gray-800">Panel de Control</h1>
+            <!-- Información del usuario y botón de cierre de sesión -->
+            <div class="flex items-center space-x-4">
+                <span id="welcomeName" class="text-gray-600 font-medium">Cargando...</span>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                    Cerrar sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- SECCIÓN DE PROYECTOS (visible para estudiantes y docentes) -->
+        <div id="seccionProyectos">
+            <!-- Cabecera con título y botón para nuevo proyecto (solo visible para estudiantes) -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h2 class="text-xl font-semibold text-gray-700">Mis Proyectos</h2>
+                <button onclick="abrirModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    Nuevo Proyecto
+                </button>
+            </div>
+
+            <!-- FILTROS PARA DOCENTE (se muestran solo si el rol es 'teacher') -->
+            <div id="filtrosDocente" class="mb-6 hidden">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <!-- Campo de búsqueda por texto -->
+                    <input type="text" id="buscarProyecto" placeholder="Buscar por título o descripción..." 
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <!-- Selector de filtro por estado -->
+                    <select id="filtroEstado" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+                        <option value="todos">Todos los estados</option>
+                        <option value="draft">Borrador</option>
+                        <option value="submitted">Enviado</option>
+                        <option value="approved">Aprobado</option>
+                        <option value="rejected">Rechazado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Grid donde se renderizan las tarjetas de proyectos -->
+            <div id="listaProyectos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p class="text-gray-500 italic col-span-full">Cargando proyectos...</p>
+            </div>
+        </div>
+
+        <!-- PANEL DE ADMINISTRADOR (oculto por defecto, se muestra solo para admin) -->
+        <div id="adminPanel" class="hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Gestión de Usuarios</h2>
+            <!-- Contenedor con scroll horizontal para tablas en móviles -->
+            <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+                <table class="min-w-full table-auto text-sm">
+                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                        <tr>
+                            <th class="py-3 px-4 text-left">Nombre</th>
+                            <th class="py-3 px-4 text-left">Email</th>
+                            <th class="py-3 px-4 text-left">Rol Actual</th>
+                            <th class="py-3 px-4 text-center">Cambiar Rol</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaUsuarios" class="divide-y divide-gray-200">
+                        <!-- Se llena dinámicamente desde JavaScript -->
+                        <tr><td colspan="4" class="py-6 text-center text-gray-500">Cargando usuarios...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Contenedor opcional para mensajes de éxito/error en admin -->
+            <div id="adminMessage" class="mt-4"></div>
+        </div>
+    </main>
+
+    <!-- ==================== MODAL: CREAR PROYECTO ==================== -->
+    <div id="modalProyecto" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal-transition z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Nuevo Proyecto</h3>
+                <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="formNuevoProyecto">
+                <div class="mb-4">
+                    <label for="tituloProyecto" class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                    <input type="text" id="tituloProyecto" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                <div class="mb-4">
+                    <label for="descProyecto" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <textarea id="descProyecto" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="cerrarModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancelar</button>
+                    <button type="submit" id="btnGuardarProyecto" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">Guardar Proyecto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: TAREAS DEL PROYECTO ==================== -->
+    <div id="modalTareas" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal-transition z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Tareas de: <span id="tituloProyectoTarea" class="text-blue-600">Proyecto</span></h3>
+                <button onclick="cerrarModalTareas()" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Lista de tareas existentes -->
+            <div id="listaTareas" class="space-y-2 mb-6 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <p class="text-sm text-gray-500">Selecciona un proyecto para ver sus tareas.</p>
+            </div>
+
+            <!-- Formulario para agregar nueva tarea -->
+            <h4 class="font-semibold text-gray-700 mb-2">Agregar nueva tarea</h4>
+            <form id="formNuevaTarea">
+                <input type="hidden" id="tareaProjectId" value="">
+                <div class="mb-3">
+                    <label for="descTarea" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <input type="text" id="descTarea" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                <div class="mb-4">
+                    <label for="fechaTarea" class="block text-sm font-medium text-gray-700 mb-1">Fecha de entrega (opcional)</label>
+                    <input type="date" id="fechaTarea" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" id="btnGuardarTarea" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">+ Agregar Tarea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cargar el archivo de lógica (app.js) -->
+    <script src="app.js"></script>
+</body>
+</html>
