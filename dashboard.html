@@ -3,60 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema de Seguimiento</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Dashboard · Sistema de Seguimiento</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Fuente Inter para mejor legibilidad -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        /* Transición suave para la aparición de modales */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f9fafc 0%, #f1f4f9 100%);
+        }
+        h1, h2, h3, .heading-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
         .modal-transition {
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover {
+            transition: all 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
+        }
+        #listaTareas::-webkit-scrollbar {
+            width: 6px;
+        }
+        #listaTareas::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #listaTareas::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen antialiased text-gray-700">
 
-    <!-- ==================== ENCABEZADO ==================== -->
-    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+    <header class="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-10 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <!-- Título del panel -->
-            <h1 class="text-2xl font-bold text-gray-800">Panel de Control</h1>
-            <!-- Información del usuario y botón de cierre de sesión -->
-            <div class="flex items-center space-x-4">
-                <span id="welcomeName" class="text-gray-600 font-medium">Cargando...</span>
-                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
-                    Cerrar sesión
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    </svg>
+                </div>
+                <h1 class="text-xl sm:text-2xl heading-font font-bold text-gray-800 truncate">Panel</h1>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <span id="welcomeName" class="hidden sm:inline-block text-gray-600 font-medium bg-gray-100 px-4 py-2 rounded-full text-sm truncate max-w-[150px] md:max-w-xs">Cargando...</span>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-red-200 hover:shadow-lg flex items-center gap-1 sm:gap-2 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="hidden sm:inline">Salir</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
-        <!-- SECCIÓN DE PROYECTOS (visible para estudiantes y docentes) -->
         <div id="seccionProyectos">
-            <!-- Cabecera con título y botón para nuevo proyecto (solo visible para estudiantes) -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <h2 class="text-xl font-semibold text-gray-700">Mis Proyectos</h2>
-                <button onclick="abrirModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+                <h2 class="text-xl sm:text-2xl heading-font font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Mis Proyectos</h2>
+                <button onclick="abrirModal()" class="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
                     Nuevo Proyecto
                 </button>
             </div>
 
-            <!-- FILTROS PARA DOCENTE (se muestran solo si el rol es 'teacher') -->
-            <div id="filtrosDocente" class="mb-6 hidden">
-                <div class="flex flex-col md:flex-row gap-4">
-                    <!-- Campo de búsqueda por texto -->
-                    <input type="text" id="buscarProyecto" placeholder="Buscar por título o descripción..." 
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                    <!-- Selector de filtro por estado -->
-                    <select id="filtroEstado" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+            <div id="filtrosDocente" class="mb-6 sm:mb-8 hidden">
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex-1 relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input type="text" id="buscarProyecto" placeholder="Buscar por título o descripción..." 
+                            class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none bg-gray-50/50 text-sm">
+                    </div>
+                    <select id="filtroEstado" class="w-full sm:w-auto px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none bg-white text-sm">
                         <option value="todos">Todos los estados</option>
                         <option value="draft">Borrador</option>
                         <option value="submitted">Enviado</option>
@@ -66,44 +95,38 @@
                 </div>
             </div>
 
-            <!-- Grid donde se renderizan las tarjetas de proyectos -->
-            <div id="listaProyectos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="listaProyectos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <p class="text-gray-500 italic col-span-full">Cargando proyectos...</p>
             </div>
         </div>
 
-        <!-- PANEL DE ADMINISTRADOR (oculto por defecto, se muestra solo para admin) -->
         <div id="adminPanel" class="hidden">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Gestión de Usuarios</h2>
-            <!-- Contenedor con scroll horizontal para tablas en móviles -->
-            <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+            <h2 class="text-xl sm:text-2xl heading-font font-bold bg-gradient-to-r from-purple-800 to-purple-600 bg-clip-text text-transparent mb-4">Gestión de Usuarios</h2>
+            <div class="overflow-x-auto bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
                 <table class="min-w-full table-auto text-sm">
-                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
-                            <th class="py-3 px-4 text-left">Nombre</th>
-                            <th class="py-3 px-4 text-left">Email</th>
-                            <th class="py-3 px-4 text-left">Rol Actual</th>
-                            <th class="py-3 px-4 text-center">Cambiar Rol</th>
+                            <th class="py-3 px-4 sm:py-4 sm:px-6 text-left font-semibold whitespace-nowrap">Nombre</th>
+                            <th class="py-3 px-4 sm:py-4 sm:px-6 text-left font-semibold whitespace-nowrap">Email</th>
+                            <th class="py-3 px-4 sm:py-4 sm:px-6 text-left font-semibold whitespace-nowrap">Rol Actual</th>
+                            <th class="py-3 px-4 sm:py-4 sm:px-6 text-center font-semibold whitespace-nowrap">Cambiar Rol</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaUsuarios" class="divide-y divide-gray-200">
-                        <!-- Se llena dinámicamente desde JavaScript -->
-                        <tr><td colspan="4" class="py-6 text-center text-gray-500">Cargando usuarios...</td></tr>
+                    <tbody id="tablaUsuarios" class="divide-y divide-gray-100">
+                        <tr><td colspan="4" class="py-8 text-center text-gray-400">Cargando usuarios...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <!-- Contenedor opcional para mensajes de éxito/error en admin -->
             <div id="adminMessage" class="mt-4"></div>
         </div>
     </main>
 
-    <!-- ==================== MODAL: CREAR PROYECTO ==================== -->
-    <div id="modalProyecto" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal-transition z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Nuevo Proyecto</h3>
-                <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div id="modalProyecto" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center hidden modal-transition z-50 p-4">
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-7 border border-white/30">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg sm:text-xl heading-font font-bold text-gray-800">Crear nuevo proyecto</h3>
+                <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl p-2 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
@@ -111,57 +134,69 @@
             <form id="formNuevoProyecto">
                 <div class="mb-4">
                     <label for="tituloProyecto" class="block text-sm font-medium text-gray-700 mb-1">Título</label>
-                    <input type="text" id="tituloProyecto" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <input type="text" id="tituloProyecto" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none bg-gray-50 text-sm">
                 </div>
-                <div class="mb-4">
+                <div class="mb-5">
                     <label for="descProyecto" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                    <textarea id="descProyecto" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"></textarea>
+                    <textarea id="descProyecto" rows="3" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none bg-gray-50 text-sm"></textarea>
                 </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="cerrarModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancelar</button>
-                    <button type="submit" id="btnGuardarProyecto" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">Guardar Proyecto</button>
+                <div class="flex justify-end gap-2 sm:gap-3">
+                    <button type="button" onclick="cerrarModal()" class="w-full sm:w-auto px-5 py-2.5 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-100 transition font-medium text-sm">Cancelar</button>
+                    <button type="submit" id="btnGuardarProyecto" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition font-medium shadow-lg shadow-indigo-200 text-sm">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ==================== MODAL: TAREAS DEL PROYECTO ==================== -->
-    <div id="modalTareas" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal-transition z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Tareas de: <span id="tituloProyectoTarea" class="text-blue-600">Proyecto</span></h3>
-                <button onclick="cerrarModalTareas()" class="text-gray-500 hover:text-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div id="modalTareas" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center hidden modal-transition z-50 p-4">
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 max-h-[90vh] overflow-hidden flex flex-col border border-white/30">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <h3 class="text-lg sm:text-xl heading-font font-bold text-gray-800 truncate pr-4">
+                    <span class="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Tareas:</span> 
+                    <span id="tituloProyectoTarea" class="text-gray-700">Proyecto</span>
+                </h3>
+                <button onclick="cerrarModalTareas()" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl p-2 transition shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
-            <!-- Lista de tareas existentes -->
-            <div id="listaTareas" class="space-y-2 mb-6 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
-                <p class="text-sm text-gray-500">Selecciona un proyecto para ver sus tareas.</p>
+            <div id="listaTareas" class="space-y-2 mb-4 flex-1 overflow-y-auto border border-gray-100 rounded-2xl p-4 bg-gray-50/80 min-h-[150px]">
+                <p class="text-sm text-gray-400 text-center py-4">Selecciona un proyecto para ver sus tareas.</p>
             </div>
 
-            <!-- Formulario para agregar nueva tarea -->
-            <h4 class="font-semibold text-gray-700 mb-2">Agregar nueva tarea</h4>
-            <form id="formNuevaTarea">
-                <input type="hidden" id="tareaProjectId" value="">
-                <div class="mb-3">
-                    <label for="descTarea" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                    <input type="text" id="descTarea" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                </div>
-                <div class="mb-4">
-                    <label for="fechaTarea" class="block text-sm font-medium text-gray-700 mb-1">Fecha de entrega (opcional)</label>
-                    <input type="date" id="fechaTarea" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                </div>
-                <div class="flex justify-end">
-                    <button type="submit" id="btnGuardarTarea" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">+ Agregar Tarea</button>
-                </div>
-            </form>
+            <div class="shrink-0 mt-2">
+                <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M6 10a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zM7 13a1 1 0 100 2h6a1 1 0 100-2H7z" />
+                        <path fill-rule="evenodd" d="M3 4a2 2 0 012-2h10a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V4zm2 0h10v12H5V4z" clip-rule="evenodd" />
+                    </svg>
+                    Agregar nueva tarea
+                </h4>
+                <form id="formNuevaTarea">
+                    <input type="hidden" id="tareaProjectId" value="">
+                    <div class="mb-3">
+                        <label for="descTarea" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <input type="text" id="descTarea" required class="w-full px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none bg-gray-50 text-sm">
+                    </div>
+                    <div class="mb-4">
+                        <label for="fechaTarea" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Fecha de entrega (opcional)</label>
+                        <input type="date" id="fechaTarea" class="w-full px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none bg-gray-50 text-gray-600 text-sm">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" id="btnGuardarTarea" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl hover:from-emerald-600 hover:to-green-700 transition font-medium shadow-lg shadow-green-100 flex items-center justify-center gap-2 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Agregar Tarea
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Cargar el archivo de lógica (app.js) -->
     <script src="app.js"></script>
 </body>
 </html>

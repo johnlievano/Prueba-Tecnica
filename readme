@@ -1,0 +1,34 @@
+# Sistema de Seguimiento de Proyectos
+
+Sistema integral para la gestión y evaluación de proyectos. Arquitectura Full-Stack desacoplada orientada a la eficiencia, escalabilidad y rendimiento.
+
+## Arquitectura Técnica
+
+* **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript. Interfaz responsiva y asíncrona. Despliegue en **Vercel**.
+* **Backend (API):** Google Apps Script. Expone endpoints REST (`doPost`, `doGet`) para la manipulación de datos.
+* **Base de Datos:** Google Sheets. Tablas relacionales para Usuarios, Proyectos, Tareas, Logs y Tokens de recuperación.
+* **Seguridad:** * Cifrado de contraseñas mediante algoritmo SHA-256.
+    * Generación de tokens UUID temporales (caducidad de 1 hora) para recuperación de accesos.
+    * Auditoría de acciones (Logs) por usuario y marca de tiempo.
+
+## Enlaces de Producción
+
+* **Aplicación Web (Vercel):** [https://prueba-tecnica-lilac.vercel.app/](https://prueba-tecnica-lilac.vercel.app/)
+* **Base de Datos (Google Sheets):** [Sistema_Proyectos_DB](https://docs.google.com/spreadsheets/d/13L_Kej7-SSJ4lc-zsBz7sFnYpF7WJzz4Mc5xTSkPqEs/edit?usp=sharing)
+* **API Backend (Apps Script):** [Código de Servidor](https://script.google.com/d/188jamGOYYuPBkC5TDih5sIxPCWxy80EJRwzV7bL4QcBFUh4h2V7sWehC/edit?usp=sharing)
+
+## Credenciales de Acceso (Entorno de Prueba)
+
+El sistema soporta control de acceso basado en roles (RBAC). Utilice las siguientes credenciales para auditar las vistas condicionales:
+
+| Rol | Correo Electrónico | Contraseña | Capacidades |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `john@test.com` | `123456` | Gestión del panel de usuarios y modificación de roles. |
+| **Docente** | `andrea@test.com` | `123456` | Filtrado dinámico, revisión y cambio de estado de proyectos. |
+| **Estudiante** | `juan@test.com` | `123456` | Creación de proyectos y asignación de tareas. |
+
+## Ejecución Local
+
+1. Clonar el repositorio:
+   ```bash
+   git clone [https://github.com/johnlievano/Prueba-Tecnica.git](https://github.com/johnlievano/Prueba-Tecnica.git)
